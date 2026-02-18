@@ -6,9 +6,10 @@ BYTE_LEN = 8
 
 
 class LZSS:
-    def __init__(self, sb_size=32, lab_size=32):
+    def __init__(self, sb_size=64, lab_size=64):
         self.search_buf_len = sb_size  # W, window size
         self.offset_bits = ceil(log2(self.search_buf_len))
+        print(self.offset_bits)
 
         self.look_ahead_buf_len = lab_size
 
@@ -31,44 +32,44 @@ class LZSS:
 
         return "0b" + l1_part + l2_part + l3_part
 
-    def encode(self, input_sequence: str):
-        bit_stream = BitArray()
+    # def encode(self, input_sequence: str):
+    #     bit_stream = BitArray()
 
-        pos = 0
-        while pos < len(input_sequence):
-            search_buf: str = input_sequence[max(0, pos - self.search_buf_len) : pos]
+    #     pos = 0
+    #     while pos < len(input_sequence):
+    #         search_buf: str = input_sequence[max(0, pos - self.search_buf_len) : pos]
 
-            # Match return-params
-            match_length = 0
-            match_start_pos = -1
-            # Match search loop
-            for increment in range(1, self.look_ahead_buf_len + 1):
-                candidate = input_sequence[pos : pos + increment]
+    #         # Match return-params
+    #         match_length = 0
+    #         match_start_pos = -1
+    #         # Match search loop
+    #         for increment in range(1, self.look_ahead_buf_len + 1):
+    #             candidate = input_sequence[pos : pos + increment]
 
-                search_res = search_buf.rfind(candidate)
-                if search_res <= -1:
-                    break
+    #             search_res = search_buf.rfind(candidate)
+    #             if search_res <= -1:
+    #                 break
 
-                match_length = len(candidate)
-                match_start_pos = search_res
+    #             match_length = len(candidate)
+    #             match_start_pos = search_res
 
-            # Assemble output bit-sequence
-            if match_length >= 2:
-                bit_stream.append("0b1")
-                offset = len(search_buf) - match_start_pos
-                bit_stream.append(f"uint:{self.offset_bits}={offset}")
+    #         # Assemble output bit-sequence
+    #         if match_length >= 2:
+    #             bit_stream.append("0b1")
+    #             offset = len(search_buf) - match_start_pos
+    #             bit_stream.append(f"uint:{self.offset_bits}={offset}")
 
-                length_bit = self._encode_length_by_elias(match_length)
-                bit_stream.append(length_bit)
+    #             length_bit = self._encode_length_by_elias(match_length)
+    #             bit_stream.append(length_bit)
 
-                pos += match_length
+    #             pos += match_length
 
-            else:
-                bit_stream.append("0b0")
-                bit_stream.append(f"uint:{BYTE_LEN}={ord(input_sequence[pos])}")
-                pos += 1
+    #         else:
+    #             bit_stream.append("0b0")
+    #             bit_stream.append(f"uint:{BYTE_LEN}={ord(input_sequence[pos])}")
+    #             pos += 1
 
-        return bit_stream
+    #     return bit_stream
 
     def encode_with_table(self, input_sequence: str):
         steps = []
@@ -102,11 +103,18 @@ class LZSS:
                 "Bits": 0,
             }
 
+            effective_history_len = max(1, min(pos, self.search_buf_len))
+            current_offset_bits = ceil(log2(effective_history_len))
+
             # Assemble output bit-sequence
-            if match_length >= 2:
+            if match_length >= 1:
                 bit_stream.append("0b1")
                 offset = len(search_buf) - match_start_pos
-                bit_stream.append(f"uint:{self.offset_bits}={offset}")
+                
+                d_to_write = offset - 1
+                bit_stream.append(f"uint:{current_offset_bits}={d_to_write}")
+
+                # bit_stream.append(f"uint:{current_offset_bits}={offset}")
 
                 length_bit = self._encode_length_by_elias(match_length)
                 bit_stream.append(length_bit)
@@ -114,12 +122,12 @@ class LZSS:
                 # Fill table data for match
                 step_data["Flag"] = 1
                 step_data["Symbol sequence"] = input_sequence[pos : pos + match_length]
-                step_data["d"] = f"{offset}({pos})"
+                step_data["d"] = f"{d_to_write}({pos})"
                 step_data["l"] = match_length
                 step_data["Code sequence"] = (
-                    f"1 [{bin(offset)[2:].zfill(self.offset_bits)}] |{length_bit[2:]}|"
+                    f"1 [{bin(d_to_write)[2:].zfill(current_offset_bits)}] |{length_bit[2:]}|"
                 )
-                step_data["Bits"] = 1 + self.offset_bits + (len(length_bit) - 2)
+                step_data["Bits"] = 1 + current_offset_bits + (len(length_bit) - 2)
 
                 pos += match_length
 
@@ -179,8 +187,14 @@ class LZSS:
 
         stream = BitStream(code_sequence)
         while stream.pos < stream.len:
+            pos = len(decoded_sequence)
+            effective_history_len = max(1, min(pos, self.search_buf_len))
+            current_offset_bits = ceil(log2(effective_history_len))
             if stream.read("bool"):
-                offset = stream.read(f"uint:{self.offset_bits}")
+                d_read = stream.read(f"uint:{current_offset_bits}")
+                offset = d_read + 1
+
+                # offset = stream.read(f"uint:{current_offset_bits}")
                 match_length = self._decode_length_by_elias(stream)
 
                 start_pos = len(decoded_sequence) - offset
@@ -194,7 +208,7 @@ class LZSS:
         return decoded_sequence
 
 
-test = "IF_WE_CANNOT_DO_AS_WE_WOULD_WE_SHOULD_DO_AS_WE_CAN"
+test = "IF_WE_CANNOT_DO_AS_WE_WOULD_WE_SHOULD_DO_AS_WE_CANLD_DO_AS_WE_CANLD_DO_AS_LD_DO_AS_WE_CANLD_DO_AS_WE_CANLD_DO_AS_WE_CANWE_CANLD_DO_AS_WE_CANLD_DO_AS_WE_CANLD_DO_AS_WE_CANLD_DO_AS_WE_CAN"
 test2 = "abrababr atritigratriritigratrabrtrari ratit patati"
 
 lz = LZSS()
