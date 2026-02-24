@@ -17,7 +17,7 @@ class HammingCoder:
         print(f"Data len: {data_bits_len}, redundant len: {self._parity_bits_num}")
 
     def _evaluate_parity_bits_needed(self):
-        # (2^par ≥ total + par + 1)
+        # (2^par ≥ data + par + 1)
         while 2**self._parity_bits_num < (
             self._data_bits_num + self._parity_bits_num + 1
         ):
@@ -27,7 +27,8 @@ class HammingCoder:
         return (num - 1) & num == 0
 
     def _covered_data_bits_positions(self, parity_bit):
-        for pos in range(3, self._block_len, 1):
+        for pos in range(3, self._block_len, 1):  # Start from '3' - the fist data pos
+            # Get data bit with current parity bit turned on
             if not self._is_power_of_two(pos) and (pos & parity_bit):
                 yield pos
 
@@ -43,6 +44,7 @@ class HammingCoder:
 
         # Fill in parity bits
         for power in range(self._parity_bits_num):
+            # Get next 2^power
             parity_bit_pos = 1 << power
 
             xor_parity_res = 0  # Gives bit-value to achieve parity
@@ -50,6 +52,7 @@ class HammingCoder:
                 xor_parity_res ^= encoded[data_pos]
             encoded[parity_bit_pos] = bool(xor_parity_res)
 
+        # SECDED check
         if self.secded:
             encoded[0] = bool(encoded.count(True) % 2)
             return encoded
