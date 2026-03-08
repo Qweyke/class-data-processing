@@ -6,9 +6,9 @@ from binary_exp import mod_bin_exp
 class PrimeNumberGenerator:
     def __init__(self, num_len=1024) -> None:
         self.num_len = num_len
-        self._primes = self._generate_primes_by_sieve_of_eratosthenes()
+        self._primes = self._generate_small_primes_by_sieve_of_eratosthenes()
 
-    def _generate_primes_by_sieve_of_eratosthenes(self, limit=1000):
+    def _generate_small_primes_by_sieve_of_eratosthenes(self, limit=1000):
         prime_nums = []
         raw_nums = [True] * (limit + 1)  # +1 for iterating from idx = 2
         sqrt_limit = int(

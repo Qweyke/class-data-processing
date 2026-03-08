@@ -68,7 +68,7 @@ def decode_block(encoded: BitArray):
         if encoded[python_idx] == True:
             xor_syndrome ^= pos
             print(
-                f"Data bit at position {pos}[{bin(pos)}] with py-index {python_idx} is True. Using XOR"
+                f"Data bit at position {pos}[{bin(pos)}] with py-index {python_idx} is True. Using XOR {bin(xor_syndrome)}"
             )
 
     if xor_syndrome > encoded_len:
@@ -98,18 +98,18 @@ def decode_block(encoded: BitArray):
 
 
 if __name__ == "__main__":
-    test = BitArray("0b0011000111")
-    block_encoded = encode_block(test)
+    # test = BitArray("0b0011000111")
+    # block_encoded = encode_block(test)
 
     # Invert at python index, for hamming-count position use + 1
-    block_encoded.invert(3)
-    inverted: str = f"{block_encoded}"
-    print(f"Inverted encoded: {block_encoded.bin}")
+    # block_encoded.invert(3)
+    # inverted: str = f"{block_encoded}"
+    # print(f"Inverted encoded: {block_encoded.bin}")
 
-    block_decoded = decode_block(block_encoded)
+    block_decoded = decode_block(BitArray("0b111011011111000"))
     if block_decoded:
         print(f"Decoded block: {block_decoded.bin}")
 
-    print(
-        f"Origin sequence: {test} -> Encoded: {block_encoded} -> Inverted: {inverted} -> Decoded {block_decoded} "
-    )
+    # print(
+    #     f"Origin sequence: {test} -> Encoded: {block_encoded} -> Inverted: {inverted} -> Decoded {block_decoded} "
+    # )
