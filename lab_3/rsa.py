@@ -6,8 +6,11 @@ from prime_generator import PrimeNumberGenerator
 def generate_key_pair(key_size=2048, pub_exponent=65537):
     half_size = key_size // 2
     p = PrimeNumberGenerator(half_size).generate()
+    print(f"p = {p}\n")
     q = PrimeNumberGenerator(half_size).generate()
+    print(f"q = {q}\n")
     n = p * q
+    print(f"n = {n}\n")
 
     e = pub_exponent
     # Euler's totient func for primes
@@ -35,10 +38,12 @@ def decrypt(cipher: int, d, n):
 
 if __name__ == "__main__":
     n, e, d = generate_key_pair()
-    print(f"Public key:  e={e}\n")
-    print(f"Private key: d={d}\n\n")
+
+    print(f"Public:  e={e}\n")
+    print(f"Private: d={d}\n\n")
 
     message = 123
     encoded = encrypt(m=message, e=e, n=n)
+    print(encoded)
     decoded = decrypt(cipher=encoded, d=d, n=n)
-    print(decoded)
+    print(f"Decoded message = {decoded}")
