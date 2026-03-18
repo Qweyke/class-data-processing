@@ -33,7 +33,7 @@ def count_primes_by_dirichlet(a, b, limit_k):
     return primes_for_k, total_found
 
 
-a, b, limit = 27, 7, 20000
+a, b, limit = 27, 7, 50000
 res, total_found = count_primes_by_dirichlet(a=a, b=b, limit_k=limit)
 if res:
     # Отрисовка
