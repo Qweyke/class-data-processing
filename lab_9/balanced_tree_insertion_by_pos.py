@@ -33,7 +33,32 @@ class PositionalBalancedBinaryTree:
 
         return None
 
-    def rebalance_node(self, node):
+    def insert(self, pos, val):
+        def insert_recursively(node, pos, val):
+            if node is None:
+                return RankNode(value=val)
+
+            elif pos > node.rank:
+                pos -= node.rank
+                node.right = insert_recursively(node=node.right, pos=pos, val=val)
+
+            elif pos <= node.rank:
+                node.rank += 1
+                node.left = insert_recursively(node=node.left, pos=pos, val=val)
+
+            node = self._rebalance_node(node)
+            return node
+
+        self.root = insert_recursively(self.root, pos, val)
+
+    def show(self):
+        if not self.root:
+            print("Tree is empty")
+            return
+        v_root = self._visualize_tree(self.root)
+        print(v_root)
+
+    def _rebalance_node(self, node):
         node.height = (
             max(self._get_node_height(node.left), self._get_node_height(node.right)) + 1
         )
@@ -59,26 +84,8 @@ class PositionalBalancedBinaryTree:
 
         return node
 
-    def insert(self, pos, val):
-        def insert_recursively(node, pos, val):
-            if node is None:
-                return RankNode(value=val)
-
-            elif pos > node.rank:
-                pos -= node.rank
-                node.right = insert_recursively(node=node.right, pos=pos, val=val)
-
-            elif pos <= node.rank:
-                node.rank += 1
-                node.left = insert_recursively(node=node.left, pos=pos, val=val)
-
-            node = self.rebalance_node(node)
-            return node
-
-        self.root = insert_recursively(self.root, pos, val)
-
     def _get_node_height(self, node):
-        return node.height if node else 0
+        return node.height if node else -1
 
     def _do_right_rotation(self, origin_node):
         # Pull-up son node
@@ -125,13 +132,6 @@ class PositionalBalancedBinaryTree:
 
         # Replace origin node with pull
         return pull_node
-
-    def show(self):
-        if not self.root:
-            print("Tree is empty")
-            return
-        v_root = self._visualize_tree(self.root)
-        print(v_root)
 
     def _visualize_tree(self, node: RankNode):
         if node is None:
